@@ -1,0 +1,11 @@
+[Unit]
+After=postfix.service
+
+[Service]
+User=trackingmilter
+Group=trackingmilter
+ExecStart=/usr/bin/python ~/trackingmilter.py
+
+[Install]
+WantedBy=multi-user.target
+# WantedBy=default.target
