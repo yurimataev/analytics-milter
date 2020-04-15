@@ -52,25 +52,25 @@ class TrackingMilter(Milter.Milter):
         self.tempname = None
         self.mailfrom = f
         self.bodysize = 0
-        return Milter.CONTINUE
+        return Milter.CONTINUE  # pylint:disable=E1101
 
     def envrcpt(self, to, *str):
         "Check if the To: address is one of the tracked e-mail addresses."
         if any(e in to for e in TRACKED_EMAILS):
             self.log('Found one! To:', to, str)
-            return Milter.CONTINUE
-        return Milter.ACCEPT
+            return Milter.CONTINUE  # pylint:disable=E1101
+        return Milter.ACCEPT  # pylint:disable=E1101
 
     def header(self, name, val):
         "Record e-mail header in buffer"
         if self.buffer:
             self.buffer.write("%s: %s\n" % (name, val))  # add header to buffer
-        return Milter.CONTINUE
+        return Milter.CONTINUE  # pylint:disable=E1101
 
     def eoh(self):
         "Copy headers to a temp file so buffer can be used for body"
-        if not self.buffer:
-            return Milter.TEMPFAIL  # not seen by envfrom
+        if not self.buffer: # not seen by envfrom
+            return Milter.TEMPFAIL  # pylint:disable=E1101
         self.buffer.write("\n")
         self.buffer.seek(0)
         # copy headers to a temp file for scanning the body
@@ -79,14 +79,14 @@ class TrackingMilter(Milter.Milter):
         self.tempname = fname = tempfile.mktemp(".defang")
         self.buffer = open(fname, "w+b")
         self.buffer.write(headers)  # IOError (e.g. disk full) causes TEMPFAIL
-        return Milter.CONTINUE
+        return Milter.CONTINUE  # pylint:disable=E1101
 
     def body(self, chunk):    # copy body to temp file
         "Copy body to a tempfile"
         if self.buffer:
             self.buffer.write(chunk)  # IOError causes TEMPFAIL in milter
             self.bodysize += len(chunk)
-        return Milter.CONTINUE
+        return Milter.CONTINUE  # pylint:disable=E1101
 
     def _header_change(self, msg, name, value):
         if value:  # add header
@@ -133,8 +133,8 @@ class TrackingMilter(Milter.Milter):
     def _add_tracking_image(self, content):
         self.log("Adding tracking image to end of e-mail body")
         tempstr = \
-          '<img src="%s&amp;rec=1&amp;bots=1&amp;action_name=newsletter-open' + \
-          '&amp;e_c=newsletter&amp;e_a=open&amp;e_n=newsletter-%s" height="1" width="1">'
+            '<img src="%s&amp;rec=1&amp;bots=1&amp;action_name=newsletter-open' + \
+            '&amp;e_c=newsletter&amp;e_a=open&amp;e_n=newsletter-%s" height="1" width="1">'
         content += tempstr % (PIWIK_IMAGE_URL, strftime('%Y-%b-%d'))
         return content
 
@@ -172,7 +172,7 @@ class TrackingMilter(Milter.Milter):
     def eom(self):
         "Attempt to replace message body if message matched our critera"
         if not self.buffer:
-            return Milter.ACCEPT
+            return Milter.ACCEPT  # pylint:disable=E1101
         self.buffer.seek(0)
         msg = email.message_from_file(self.buffer)
         # Remove all headers so we can work with just body
@@ -181,8 +181,8 @@ class TrackingMilter(Milter.Milter):
         # In the case of tracking marketing e-mails, this is safer than blocking the e-mail.
         if not self._add_tracking(msg):
             self.log("No parts modified")
-            return Milter.ACCEPT
-        # If message is modified by addTracking:
+            return Milter.ACCEPT  # pylint:disable=E1101
+        # If message is modified by _add_tracking:
         self.log("Temp file:", self.tempname)
         self.tempname = None  # prevent removal of original message copy
         # copy tracked message to a temp file
@@ -191,16 +191,17 @@ class TrackingMilter(Milter.Milter):
             msg.dump(out)
             out.seek(0)
             #msg = rfc822.Message(out)
-            #msg.rewindbody()
+            # msg.rewindbody()
             while 1:
                 buf = out.read(8192)
                 if len(buf) == 0:
                     break
             self.replacebody(buf)  # feed modified message to sendmail
-            return Milter.ACCEPT  # ACCEPT modified message
+            # ACCEPT modified message
+            return Milter.ACCEPT  # pylint:disable=E1101
         finally:
             out.close()
-        return Milter.TEMPFAIL
+        return Milter.TEMPFAIL  # pylint:disable=E1101
 
     def close(self):
         "Print output and clean up"
@@ -209,12 +210,12 @@ class TrackingMilter(Milter.Milter):
             os.remove(self.tempname)  # remove in case session aborted
         if self.buffer:
             self.buffer.close()
-        return Milter.CONTINUE
+        return Milter.CONTINUE  # pylint:disable=E1101
 
     def abort(self):
         "Report if TrackingMilter is interrupted"
         self.log("abort after %d body chars" % self.bodysize)
-        return Milter.CONTINUE
+        return Milter.CONTINUE  # pylint:disable=E1101
 
 
 if __name__ == "__main__":

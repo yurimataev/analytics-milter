@@ -2,9 +2,9 @@
 After=postfix.service
 
 [Service]
-User=trackingmilter
-Group=trackingmilter
-ExecStart=/usr/bin/python ~/tracking_milter.py
+User=analyticsmilter
+Group=analyticsmilter
+ExecStart=/usr/bin/python ~/analytics_milter.py
 
 [Install]
 WantedBy=multi-user.target
