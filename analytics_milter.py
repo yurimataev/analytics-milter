@@ -19,13 +19,13 @@ TRACKED_EMAILS = ('mailinglist1@domain.com', 'mailinglist2@domain.com')
 # Absolute URL to piwik.php script, used to track email opening:
 PIWIK_IMAGE_URL = "https://domain.com/piwik/piwik.php?idsite=1"
 # Socket name (will be used by Postfix to communicate with milter)
-#SOCKETNAME = os.getenv("HOME") + "/trackingmiltersock"
+#SOCKETNAME = os.getenv("HOME") + "/analyticsmiltersock"
 SOCKETNAME = 'inet:12085@127.0.0.1'
 
 # End of Configuration
 
 
-class TrackingMilter(Milter.Milter):
+class AnalyticsMilter(Milter.Milter):
     "Milter that adds Matomo tracking to e-mails."
 
     def log(self, *msg):
@@ -213,17 +213,17 @@ class TrackingMilter(Milter.Milter):
         return Milter.CONTINUE  # pylint:disable=E1101
 
     def abort(self):
-        "Report if TrackingMilter is interrupted"
+        "Report if AnalyticsMilter is interrupted"
         self.log("abort after %d body chars" % self.bodysize)
         return Milter.CONTINUE  # pylint:disable=E1101
 
 
 if __name__ == "__main__":
-    Milter.factory = TrackingMilter
+    Milter.factory = AnalyticsMilter
     print("""To use this with sendmail, add the following to sendmail.cf:
 
-O InputMailFilters=trackingmilter
-Xtrackingmilter,        S=local:%s
+O InputMailFilters=analyticsmilter
+Xanalyticsmilter,        S=local:%s
 
 See the sendmail README for libmilter.
 
@@ -233,5 +233,5 @@ smtpd_milters = local:%s $smtpd_milters
 
 tracking milter startup""" % (SOCKETNAME, SOCKETNAME))
     sys.stdout.flush()
-    Milter.runmilter("trackingmilter", SOCKETNAME, 240)
+    Milter.runmilter("analyticsmilter", SOCKETNAME, 240)
     print("tracking milter shutdown")
